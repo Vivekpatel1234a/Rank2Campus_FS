@@ -1,30 +1,46 @@
 import mongoose from 'mongoose';
 
-const DEFAULT_LOCAL_URI = 'mongodb://127.0.0.1:27017/rank2campus';
+const applicationDatabaseName = 'rank2campus';
+const localHosts = new Set(['localhost', '127.0.0.1', '::1']);
+
+const getMongoHost = (uri) =>
+  uri.match(/^mongodb(?:\+srv)?:\/\/(?:[^@/]+@)?(\[[^\]]+\]|[^/:?]+)/i)?.[1]
+    ?.replace(/^\[|\]$/g, '')
+    .toLowerCase();
+
+const getConnectionFailureMessage = (error) => {
+  const type = error?.name || 'Error';
+  const detail = error?.code === 18 || /authentication failed/i.test(error?.message || '')
+    ? 'Check the Atlas database username and password.'
+    : /querySrv|ENOTFOUND|DNS/i.test(error?.message || '')
+      ? 'Check DNS/network access and the Atlas cluster hostname.'
+      : 'Check the Atlas cluster status, Network Access IP allowlist, and database-user permissions.';
+
+  return `MongoDB Atlas connection failed (${type}). ${detail}`;
+};
 
 export default async function connectDB() {
-  const isProduction = process.env.NODE_ENV === 'production';
-  if (isProduction && !process.env.MONGODB_URI) {
-    throw new Error('MONGODB_URI must be configured in production.');
+  const uri = process.env.MONGODB_URI?.trim();
+  if (!uri) {
+    throw new Error('MONGODB_URI must be configured in backend/.env before starting the API.');
   }
 
-  const candidates = [
-    process.env.MONGODB_URI,
-    ...(isProduction ? [] : [DEFAULT_LOCAL_URI])
-  ].filter(Boolean);
-
-  let lastError;
-
-  for (const uri of [...new Set(candidates)]) {
-    try {
-      await mongoose.connect(uri);
-      console.log(`MongoDB connected: ${mongoose.connection.host}`);
-      return;
-    } catch (error) {
-      lastError = error;
-      console.warn(`MongoDB connection attempt ${candidates.indexOf(uri) + 1} failed: ${error.message}`);
-    }
+  const host = getMongoHost(uri);
+  if (!host) {
+    throw new Error('MONGODB_URI must be a valid MongoDB connection string.');
   }
 
-  throw lastError || new Error('MONGODB_URI is missing in backend/.env');
+  if (localHosts.has(host)) {
+    throw new Error('MONGODB_URI points to a local database. Configure your MongoDB Atlas connection string in backend/.env.');
+  }
+
+  try {
+    await mongoose.connect(uri, {
+      dbName: applicationDatabaseName,
+      serverSelectionTimeoutMS: 15000
+    });
+    console.log(`MongoDB Atlas connected: ${mongoose.connection.host}`);
+  } catch (error) {
+    throw new Error(getConnectionFailureMessage(error));
+  }
 }

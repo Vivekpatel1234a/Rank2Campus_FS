@@ -75,3 +75,37 @@ test('historical cutoff endpoint requires a signed-in student', async () => {
   assert.equal(response.status, 401);
   assert.equal(body.message, 'Authentication required.');
 });
+
+test('registration rejects malformed identity details without echoing the password', async () => {
+  const password = 'too-short';
+  const response = await fetch(`${baseUrl}/api/auth/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: '1234',
+      phone: '123',
+      email: 'not-an-email',
+      password
+    })
+  });
+  const body = await response.json();
+  const responseText = JSON.stringify(body);
+
+  assert.equal(response.status, 400);
+  assert.ok(Array.isArray(body.errors));
+  assert.doesNotMatch(responseText, new RegExp(password));
+  assert.ok(body.errors.every((error) => !Object.hasOwn(error, 'value')));
+});
+
+test('login rejects malformed email and missing password before database access', async () => {
+  const response = await fetch(`${baseUrl}/api/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: 'not-an-email', password: '' })
+  });
+  const body = await response.json();
+
+  assert.equal(response.status, 400);
+  assert.match(body.message, /email/i);
+  assert.ok(Array.isArray(body.errors));
+});

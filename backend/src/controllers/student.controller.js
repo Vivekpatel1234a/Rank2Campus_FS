@@ -3,6 +3,7 @@ import User from '../models/User.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { mergeStudentProfile } from '../utils/profile.js';
 import { normalizeAdmissionCategory } from '../utils/admissionCategory.js';
+import { normalizeIndianMobileNumber } from '../utils/identity.js';
 
 const allowedFields = [
   'fullName',
@@ -79,9 +80,15 @@ export const updateProfile = asyncHandler(async (req, res) => {
     return res.status(400).json({ success: false, message: 'Percentile must be between 0 and 100.' });
   }
 
-  if (updates.phone !== undefined && updates.phone !== '' &&
-      (typeof updates.phone !== 'string' || updates.phone.replace(/\D/g, '').length < 10)) {
-    return res.status(400).json({ success: false, message: 'Phone number should contain at least 10 digits.' });
+  if (updates.phone !== undefined && updates.phone !== '') {
+    const phone = normalizeIndianMobileNumber(updates.phone);
+    if (!phone) {
+      return res.status(400).json({
+        success: false,
+        message: 'Enter a valid Indian mobile number, with or without the +91 country code.'
+      });
+    }
+    updates.phone = phone;
   }
 
   if (updates.interestedBranches !== undefined &&

@@ -15,7 +15,7 @@ export function Profile(){const{user}=useAuth();const[profile,setProfile]=useSta
  <form className="form-grid" onSubmit={submit}>
   <label>Full name<input value={form.fullName} onChange={e=>updateField('fullName',e.target.value)} placeholder="Student full name" /></label>
   <label>Email<input value={profile?.user?.email || ''} readOnly disabled /></label>
-  <label>Phone number<input value={form.phone} onChange={e=>updateField('phone',e.target.value)} placeholder="9876543210" /></label>
+  <label>Phone number<input type="tel" inputMode="tel" maxLength="13" pattern="(\+91)?[6-9][0-9]{9}" value={form.phone} onChange={e=>updateField('phone',e.target.value)} placeholder="9876543210 or +919876543210" /></label>
   <label>Date of birth<input type="date" value={form.dateOfBirth} onChange={e=>updateField('dateOfBirth',e.target.value)} /></label>
   <label>Gender<select value={form.gender} onChange={e=>updateField('gender',e.target.value)}><option value="Male">Male</option><option value="Female">Female</option><option value="Other">Other</option></select></label>
   <label>State<input value={form.state} onChange={e=>updateField('state',e.target.value)} placeholder="State" /></label>

@@ -11,6 +11,7 @@ Rank2Campus is a full-stack admission counselling and seat-allocation platform t
 
 ## Features
 - Student registration and secure login
+- Sign-up validates full name, Indian mobile number, email address, and password; sign-in uses email and password
 - Student profile completion tracking
 - College and branch discovery
 - Rank prediction using historical cutoff data
@@ -37,7 +38,7 @@ Students submit the Class 10 marksheet, Class 12 marksheet, and entrance scoreca
 
 ## Requirements
 - Node.js 20+
-- MongoDB instance running locally or Atlas access
+- MongoDB Atlas cluster access
 
 ## Local setup
 1. Copy the example env files:
@@ -45,8 +46,9 @@ Students submit the Class 10 marksheet, Class 12 marksheet, and entrance scoreca
    cp backend/.env.example backend/.env
    cp frontend/.env.example frontend/.env
    ```
-2. Update values in `backend/.env` as needed, especially `MONGODB_URI`, `JWT_SECRET`, and admin credentials.
-3. Install dependencies and start the project:
+2. In MongoDB Atlas, create a database user and allow the machine or hosting service IP in Network Access. Copy the cluster connection string into `MONGODB_URI` in `backend/.env`; the application uses the `rank2campus` database. In Compass, open `rank2campus` rather than the URI's default `test` database. Do not share or commit the URI.
+3. Set `JWT_SECRET` and the admin credentials in `backend/.env`.
+4. Install dependencies and start the project:
    ```bash
    npm install
    npm run seed
@@ -84,7 +86,7 @@ The seed script creates an admin user from `backend/.env` values:
 
 Change these credentials before using the app in a real environment.
 
-For production, set `NODE_ENV=production`, a unique `JWT_SECRET` of at least 32 characters, `MONGODB_URI`, and `CLIENT_URL`. The backend intentionally will not fall back to a local database in production.
+The backend requires `MONGODB_URI` in every environment and will not fall back to a local database. For production, also set `NODE_ENV=production`, a unique `JWT_SECRET` of at least 32 characters, and `CLIENT_URL`.
 
 ## Important notice
 - Seeded data is demo-only and should not be used as official admission data.
