@@ -1,0 +1,10 @@
+import {Router} from 'express';
+import {protect,allowRoles} from '../middleware/auth.middleware.js';
+import {uploadDocument,createDocument,myDocuments,allDocuments,reviewDocument} from '../controllers/document.controller.js';
+const router=Router();
+router.use(protect);
+router.post('/',allowRoles('student'),uploadDocument,createDocument);
+router.get('/mine',allowRoles('student'),myDocuments);
+router.get('/',allowRoles('admin'),allDocuments);
+router.patch('/:id/review',allowRoles('admin'),reviewDocument);
+export default router;
