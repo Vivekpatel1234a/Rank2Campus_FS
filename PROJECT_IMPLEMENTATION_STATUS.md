@@ -139,28 +139,44 @@ No broad migration was needed because the repository was already shaped correctl
 - Protected institutional catalog restoration so seeded colleges/branches are automatically restored if the catalog is accidentally cleared, preventing a blank or broken admissions catalog
 - Admission round status persistence and admin/student visibility now use the same configured backend port; backend startup fails clearly on port conflicts rather than silently switching to an API port the frontend does not use
 - Rank predictor cutoff matching now rejects invalid cutoff values and has focused unit coverage for Safe, Moderate, Risky, and invalid-input classifications
+- Document files are no longer served publicly; authenticated student/admin downloads verify ownership, validate file signatures, and use an application-root upload directory
+- Students submit Class 10, Class 12, and entrance scorecard files together; administrators make separate review decisions per document, and allocation checks the latest approval for each required document
+- Notifications validate audience/content, report unread counts per signed-in audience, scope read updates to authorized announcements, and use an in-app announcements workflow
+- Profile avatar links to the signed-in account profile; student and admin adviser views use an accessible, scrollable conversation layout
+- Allocation keeps original branch capacity, reserves seats using an atomic counter that supports existing records without the counter, compensates failed writes, and lets students accept or decline offers
+- Allocation runs only after preference intake closes; the admin workflow shows per-round locked-preference and offer counts, filters results to the selected round, and gives actionable skip reasons
+- Round deletion removes unallocated preferences/applications with confirmation, while rounds with allocation records cannot be deleted or reopened so allocation history remains auditable
+- Student allocation results are reachable from the student navigation
+- Student profile updates preserve omitted academic fields and recalculate completion from merged values
+- Admin CSV cutoff import validates headers, row values, college/branch codes, duplicates, and file size before importing
+- Admin historical cutoff management supports filtered/paged browsing and CSV export as well as validated upload
+- AI counselling uses student profile, historical cutoffs, platform metrics, and recent conversation history; general-knowledge questions are answered separately from platform facts
+- Gemini uses the documented `gemini-3.5-flash-lite` default with explicit timeout, provider-error, and empty-response handling
+- The API supports `/api/v1` while retaining `/api` compatibility; production startup requires explicit database, client-origin, and strong JWT configuration
+- Backend unit/API tests now cover CSV parsing, profile merge/completion, predictor matching, public health, versioned health, 404 handling, and anonymous authorization checks
 
 ### Remaining gaps for deeper production-grade completion
 
-- Formal migration framework
-- v1 API versioning
+- Formal database migration framework
 - Role expansion beyond admin/student
-- CSV/Excel cutoff import validation pipeline
-- Deep analytics/report export
-- OCR and classification automation
-- Email/SMS provider abstraction
-- Comprehensive automated tests
+- Excel cutoff import
+- Expanded analytics and API documentation
+- OCR and document classification automation (requires a chosen/configured OCR provider)
+- Email/SMS delivery (requires provider choice and credentials)
+- Full database-backed workflow and browser end-to-end tests
 - Full audit log and permission management
 - Super admin / verification officer segmentation
+- System-wide dark mode
 
 ## 6. Verified Commands
 
 The following commands were executed during the audit and implementation work:
 
-- `cd C:\Users\vivek\OneDrive\Desktop\Rank2Campus_FullStack_Starter; node --test backend/tests/profile.test.js`
-- `cd C:\Users\vivek\OneDrive\Desktop\Rank2Campus_FullStack_Starter; npm --prefix frontend run build`
-- `curl.exe http://localhost:5000/api/health`
-- `cd C:\Users\vivek\OneDrive\Desktop\Rank2Campus_FullStack_Starter\backend; node server.js` (verified startup succeeds without failing when the default port is already occupied)
+- `npm test` (14 tests pass)
+- `npm run build` (frontend production build succeeds)
+- Live health checks on `/api/health` and `/api/v1/health`
+- Live anonymous access checks for admin and cutoff-import routes return `401`
+- Local MongoDB connection and backend startup verified on an available port
 
 Additional validation performed during the final stabilization pass:
 
@@ -173,6 +189,6 @@ The project is now substantially closer to the full Rank2Campus product specific
 
 ## 8. Current Status
 
-- Status: In active development toward specification completion
-- Confidence: High for the current local project state
-- Major next milestone: production-hardening and test coverage for critical workflows
+- Status: Core workflows hardened; production integrations and expanded verification remain
+- Confidence: Core API smoke tests and frontend build pass; full database-backed E2E workflows have not been verified
+- Major next milestone: select/configure OCR and email providers, agree on expanded roles/policies, and add database-backed browser tests

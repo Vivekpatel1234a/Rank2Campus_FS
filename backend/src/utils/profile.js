@@ -26,3 +26,13 @@ export function calculateProfileCompletion(student) {
     profileCompleted: completion >= 75
   };
 }
+
+export function mergeStudentProfile(current, updates) {
+  const academicInfo = {
+    ...(current.academicInfo || {}),
+    ...(updates.academicInfo || {})
+  };
+  const merged = { ...current, ...updates, academicInfo };
+
+  return { ...merged, ...calculateProfileCompletion(merged) };
+}

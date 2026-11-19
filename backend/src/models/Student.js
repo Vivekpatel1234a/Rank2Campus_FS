@@ -39,35 +39,4 @@ studentSchema.pre('save', function(next) {
   next();
 });
 
-studentSchema.pre(['findOneAndUpdate', 'updateOne', 'updateMany'], function(next) {
-  const update = this.getUpdate();
-  const payload = update && update.$set ? update.$set : update;
-  if (payload && typeof payload === 'object') {
-    const maybeStudent = { ...payload };
-    const fieldsToCheck = [
-      'fullName', 'dateOfBirth', 'gender', 'state', 'city', 'category', 'examName', 'rank', 'score', 'percentile', 'interestedBranches', 'academicInfo'
-    ];
-
-    const base = { ...payload };
-    for (const key of fieldsToCheck) {
-      if (key in base) {
-        maybeStudent[key] = base[key];
-      }
-    }
-    const fakeStudent = {
-      ...maybeStudent,
-      academicInfo: maybeStudent.academicInfo || {}
-    };
-    const result = calculateProfileCompletion(fakeStudent);
-    if (payload.$set) {
-      payload.$set.profileCompletion = result.profileCompletion;
-      payload.$set.profileCompleted = result.profileCompleted;
-    } else {
-      payload.profileCompletion = result.profileCompletion;
-      payload.profileCompleted = result.profileCompleted;
-    }
-  }
-  next();
-});
-
 export default mongoose.model('Student', studentSchema);

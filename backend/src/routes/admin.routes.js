@@ -7,7 +7,10 @@ import {
     resetAdmissionCycle,
     seedFreshCycle,
     listStudents,
+    getStudentDetails,
     createCutoff,
+    importCutoffs,
+    cutoffCsvUpload,
     listCutoffs,
     updateCutoff,
     deleteCutoff,
@@ -35,8 +38,10 @@ router.post('/seed-fresh-cycle', seedFreshCycle);
 
 // Students
 router.get('/students', listStudents);
+router.get('/students/:id', getStudentDetails);
 
 // Cutoff Management
+router.post('/cutoffs/import', cutoffCsvUpload, importCutoffs);
 router.post('/cutoffs', createCutoff);
 router.get('/cutoffs', listCutoffs);
 router.patch('/cutoffs/:id', updateCutoff);

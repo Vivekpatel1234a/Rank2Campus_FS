@@ -18,6 +18,22 @@ Rank2Campus is a full-stack admission counselling and seat-allocation platform t
 - Document upload and admin review workflow
 - Notifications for students and admins
 - Admin dashboard and seat allocation engine
+- Authenticated student/admin document downloads
+- Bulk cutoff CSV import with row validation
+- Admin historical cutoff library with filters, paging, and CSV export
+- Student read-only cutoff history with rank comparison
+- Student allocation offer acceptance and decline
+- Floating Gemini AI advisor for general questions and context-grounded Rank2Campus data
+- Three-document student submission with independent administrator verification
+- In-app, audience-specific announcements and per-user read status
+- Backward-compatible versioned API at `/api/v1`
+
+## Allocation and round administration
+Student choices must be saved and locked for the exact admission round before allocation. Admins must close preference intake before running the merit-ordered allocation; the allocation page shows per-round locked-preference and offer counts and lists skip reasons. Rounds with allocation records cannot be deleted or reopened so their audit history is preserved. A round with no allocation records can be deleted after confirmation; its dependent preference/application records are removed with it.
+
+Offers reserve seats while provisional or accepted. Declined offers release the reserved seat, and starting a fresh cycle clears prior seat reservations along with the cycle's student records.
+
+Students submit the Class 10 marksheet, Class 12 marksheet, and entrance scorecard together from Documents. Administrators review each file independently and must add a reason to reject one. A rejected file requires a new complete three-document submission. The profile avatar opens the signed-in account’s profile; announcements are shown in the in-app Notifications page rather than browser alerts.
 
 ## Requirements
 - Node.js 20+
@@ -38,6 +54,8 @@ Rank2Campus is a full-stack admission counselling and seat-allocation platform t
    ```
    This runs both the backend and frontend together.
 
+Run backend API and validation tests with `npm test`. Admins can upload, browse, filter, and export historical cutoff records at `/admin/cutoffs/import`; students can browse and compare cutoffs from Cutoff history. The CSV required columns are `collegeCode`, `branchCode`, `year`, `category`, and `closingRank`. `collegeName`, `location`, `branchName`, `examName`, `round`, and `openingRank` are optional. Historical imports do not require a matching active college or branch; matching catalog branches are linked automatically, while unmatched rows retain their supplied codes and names as snapshots. Category labels are normalized (`GENERAL`/`GEN`/`UR` to `OPEN`, and `OBC` to `OBC-NCL`); supported groups are OPEN, EWS, OBC-NCL, SC, and ST. The floating AI adviser uses `GEMINI_API_KEY` and `GEMINI_MODEL` from `backend/.env`; it can answer general questions and uses stored Rank2Campus data for platform-specific answers.
+
 ## Manual run
 Backend:
 ```bash
@@ -57,6 +75,7 @@ npm run dev -- --host 0.0.0.0
 - Frontend: http://localhost:5173
 - Backend: http://localhost:5000
 - Health: http://localhost:5000/api/health
+- Versioned health: http://localhost:5000/api/v1/health
 
 ## Demo login
 The seed script creates an admin user from `backend/.env` values:
@@ -64,6 +83,8 @@ The seed script creates an admin user from `backend/.env` values:
 - Password: `SEED_ADMIN_PASSWORD`
 
 Change these credentials before using the app in a real environment.
+
+For production, set `NODE_ENV=production`, a unique `JWT_SECRET` of at least 32 characters, `MONGODB_URI`, and `CLIENT_URL`. The backend intentionally will not fall back to a local database in production.
 
 ## Important notice
 - Seeded data is demo-only and should not be used as official admission data.

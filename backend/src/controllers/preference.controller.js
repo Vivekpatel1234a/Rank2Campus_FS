@@ -21,6 +21,9 @@ export const savePreferences=asyncHandler(async(req,res)=>{
 });
 export const lockPreferences=asyncHandler(async(req,res)=>{
  const student=await Student.findOne({user:req.user._id});
+ if(!student)return res.status(404).json({success:false,message:'Student profile not found.'});
+ const round=await AdmissionRound.findById(req.params.roundId);
+ if(!round||round.status!=='open')return res.status(400).json({success:false,message:'This admission round is not open for locking.'});
  const pref=await Preference.findOne({student:student._id,admissionRound:req.params.roundId});
  if(!pref||!pref.choices.length)return res.status(404).json({success:false,message:'Save preferences before locking.'});
  pref.isLocked=true;pref.lockedAt=new Date();await pref.save();

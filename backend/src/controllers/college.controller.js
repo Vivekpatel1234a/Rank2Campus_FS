@@ -2,6 +2,7 @@ import College from '../models/College.js';
 import Branch from '../models/Branch.js';
 import Cutoff from '../models/Cutoff.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
+import { normalizeAdmissionCategory } from '../utils/admissionCategory.js';
 
 const protectedCatalogSpecs = [
   {
@@ -102,13 +103,38 @@ export const listColleges = asyncHandler(async (req, res) => {
 
   const colleges = await College.find(filter).sort('name').lean();
   const ids = colleges.map((c) => c._id);
-  const branches = await Branch.find({ college: { $in: ids } }).lean();
+  const branches = await Branch.find({
+    college: { $in: ids },
+    ...(includeInactive ? {} : { isActive: true })
+  }).lean();
+  const branchIds = branches.map((branch) => branch._id);
+  const cutoffs = branchIds.length
+    ? await Cutoff.find({ branch: { $in: branchIds } })
+      .sort({ year: -1, round: -1 })
+      .select('branch examName year round category openingRank closingRank')
+      .lean()
+    : [];
+  const cutoffsByBranch = new Map();
+  for (const cutoff of cutoffs) {
+    const key = String(cutoff.branch);
+    const records = cutoffsByBranch.get(key) || [];
+    records.push({
+      ...cutoff,
+      category: normalizeAdmissionCategory(cutoff.category) || cutoff.category
+    });
+    cutoffsByBranch.set(key, records);
+  }
 
   res.json({
     success: true,
     data: colleges.map((college) => ({
       ...college,
-      branches: branches.filter((branch) => String(branch.college) === String(college._id))
+      branches: branches
+        .filter((branch) => String(branch.college) === String(college._id))
+        .map((branch) => ({
+          ...branch,
+          cutoffs: cutoffsByBranch.get(String(branch._id)) || []
+        }))
     }))
   });
 });

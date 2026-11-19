@@ -21,16 +21,21 @@ export default function AdminReports() {
   ];
 
   const exportCsv = async () => {
+    setError('');
     try {
-      const response = await api.get('/admin/reports/export', { responseType: 'blob' });
-      const url = window.URL.createObjectURL(new Blob([response.data], { type: 'text/csv;charset=utf-8;' }));
+      const reportBlob = await api.get('/admin/reports/export', { responseType: 'blob' });
+      if (!(reportBlob instanceof Blob)) {
+        throw new Error('The server did not return a CSV file.');
+      }
+
+      const url = window.URL.createObjectURL(reportBlob);
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', 'rank2campus-report.csv');
       document.body.appendChild(link);
       link.click();
       link.remove();
-      window.URL.revokeObjectURL(url);
+      window.setTimeout(() => window.URL.revokeObjectURL(url), 60000);
     } catch (e) {
       setError(e.message || 'Unable to export report CSV.');
     }
